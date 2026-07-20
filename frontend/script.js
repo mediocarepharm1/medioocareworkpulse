@@ -2,7 +2,7 @@
 // WORKPULSE – FRONTEND LOGIN LOGIC
 // ============================================
 
-// 🔁 Backend API URL
+// 🔁 Backend API URL (EXACT URL from Render)
 const API_URL = 'https://medioocareworkpulse.onrender.com';
 
 // Wait for the page to load
@@ -16,12 +16,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const user = JSON.parse(storedUser);
             if (user && user.id) {
-                // Redirect to dashboard
                 window.location.href = '/dashboard.html';
                 return;
             }
         } catch (e) {
-            // If data is corrupted, clear it
             localStorage.removeItem('user');
         }
     }
@@ -30,27 +28,23 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        // Get input values
         const phone = document.getElementById('phone').value.trim();
         const password = document.getElementById('password').value.trim();
 
-        // Clear previous message
         message.textContent = '';
         message.className = '';
 
-        // Validate input
         if (!phone || !password) {
             message.textContent = '❌ Please fill in all fields';
             message.className = 'error';
             return;
         }
 
-        // Show loading state
         message.textContent = '⏳ Checking credentials...';
         message.className = '';
 
         try {
-            // Send login request to backend
+            // ✅ Send request to backend
             const response = await fetch(API_URL + '/api/login', {
                 method: 'POST',
                 headers: {
@@ -62,20 +56,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
 
             if (data.success) {
-                // Save user data
                 localStorage.setItem('user', JSON.stringify(data.user));
-                
-                // Show success message
                 message.textContent = '✅ ' + data.message;
                 message.className = 'success';
-
-                // Redirect to dashboard after short delay
-                setTimeout(function() {
+                setTimeout(() => {
                     window.location.href = '/dashboard.html';
                 }, 500);
-
             } else {
-                // Show error message
                 message.textContent = '❌ ' + data.message;
                 message.className = 'error';
             }
@@ -87,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // For debugging
     console.log('✅ WorkPulse login page loaded');
     console.log('📡 Backend API URL:', API_URL);
 });
