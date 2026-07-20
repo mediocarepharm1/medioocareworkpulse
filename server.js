@@ -6,16 +6,14 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ============================================
-// ✅ CORS – HANDLE PREFLIGHT REQUESTS
-// ============================================
+// ✅ CORS – Allow all origins (for development)
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// ✅ Handle OPTIONS preflight requests explicitly
+// ✅ Handle preflight OPTIONS requests
 app.options('*', (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
@@ -42,7 +40,7 @@ app.get('/', (req, res) => {
     res.json({ message: 'WorkPulse API is running!' });
 });
 
-// ✅ Login route
+// ✅ Login route – plain text password comparison
 app.post('/api/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -62,7 +60,7 @@ app.post('/api/login', async (req, res) => {
 
         const user = users[0];
 
-        // Simple password check (add bcrypt later)
+        // 🔥 PLAIN TEXT COMPARISON (for testing – we'll add bcrypt later)
         if (user.password_hash !== password) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
