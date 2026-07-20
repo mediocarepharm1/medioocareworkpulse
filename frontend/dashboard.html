@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WorkPulse - Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .dashboard-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            width: 400px;
+            text-align: center;
+        }
+        .dashboard-box h1 { color: #1a73e8; }
+        .btn-logout {
+            padding: 10px 20px;
+            background: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        .btn-logout:hover { background: #c5221f; }
+        .btn-checkin {
+            padding: 10px 20px;
+            background: #34a853;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-checkin:hover { background: #2d9248; }
+        .btn-checkout {
+            padding: 10px 20px;
+            background: #ea4335;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .btn-checkout:hover { background: #c5221f; }
+        .status { font-weight: bold; }
+        .status-checkedin { color: #34a853; }
+        .status-checkedout { color: #ea4335; }
+    </style>
+</head>
+<body>
+    <div class="dashboard-box">
+        <h1>WORKPULSE</h1>
+        <h2>Dashboard</h2>
+        <p id="userDisplay">Loading...</p>
+        <p id="roleDisplay"></p>
+        <p id="branchDisplay"></p>
+        <hr>
+        <p>Status: <span id="statusDisplay" class="status status-checkedout">Not Checked In</span></p>
+        <p>Hours Today: <span id="hoursDisplay">0.0</span>h</p>
+        <div>
+            <button class="btn-checkin" id="checkInBtn">✅ Check In</button>
+            <button class="btn-checkout" id="checkOutBtn" disabled>❌ Check Out</button>
+        </div>
+        <hr>
+        <h4>Attendance History</h4>
+        <div id="historyContainer"><p style="color:#666;font-size:14px;">No records yet.</p></div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
+
+    <script>
+        // Replace with your Render backend URL
+        const API_URL = 'https://your-backend-url.onrender.com';
+        const user = JSON.parse(localStorage.getItem('user'));
+
+        if (!user || !user.id) {
+            window.location.href = '/';
+        }
+
+        document.getElementById('userDisplay').textContent = '👋 Welcome, ' + user.name;
+        document.getElementById('roleDisplay').textContent = 'Role: ' + user.role;
+        document.getElementById('branchDisplay').textContent = '📍 Branch: ' + (user.branch_id || 'Not assigned');
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.getElementById('checkInBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) {
+                alert('❌ GPS not supported on this device');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(function(position) {
+                alert('✅ Checked in at ' + new Date().toLocaleTimeString());
+                document.getElementById('statusDisplay').textContent = '✅ Checked In';
+                document.getElementById('statusDisplay').className = 'status status-checkedin';
+                document.getElementById('checkInBtn').disabled = true;
+                document.getElementById('checkOutBtn').disabled = false;
+            }, function() {
+                alert('❌ Could not get location. Please enable GPS.');
+            });
+        });
+
+        document.getElementById('checkOutBtn').addEventListener('click', function() {
+            alert('✅ Checked out at ' + new Date().toLocaleTimeString());
+            document.getElementById('statusDisplay').textContent = '❌ Not Checked In';
+            document.getElementById('statusDisplay').className = 'status status-checkedout';
+            document.getElementById('checkInBtn').disabled = false;
+            document.getElementById('checkOutBtn').disabled = true;
+            document.getElementById('hoursDisplay').textContent = '8.0';
+        });
+    </script>
+</body>
+</html>
