@@ -2,9 +2,8 @@
 // WORKPULSE – FRONTEND LOGIN LOGIC
 // ============================================
 
-// 🔁 IMPORTANT: Replace this URL with your Render backend URL
-// Example: 'https://mediocareworkpulse.onrender.com'
-const API_URL = 'https://your-backend-url.onrender.com';
+// 🔁 Backend API URL
+const API_URL = 'https://medioocareworkpulse.onrender.com';
 
 // Wait for the page to load
 document.addEventListener('DOMContentLoaded', function() {
