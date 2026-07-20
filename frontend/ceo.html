@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WorkPulse - CEO Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f4f6f9; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
+        .box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        .back { color: #1a73e8; text-decoration: none; font-weight: 600; }
+        .back:hover { text-decoration: underline; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .subtitle { color: #666; margin-top: 5px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
+        .card { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e0e0e0; }
+        .card .number { font-size: 32px; font-weight: 700; color: #1a73e8; }
+        .card .label { font-size: 14px; color: #666; margin-top: 5px; }
+        .branch-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .branch-table th, .branch-table td { padding: 10px 12px; border: 1px solid #e0e0e0; text-align: left; }
+        .branch-table th { background: #f0f4ff; font-weight: 600; }
+        .branch-table tr:hover { background: #f8f9fa; }
+        .rank-1 { background: #fff8e1; }
+        .rank-2 { background: #f5f5f5; }
+        .rank-3 { background: #fce4ec; }
+        .badge { display: inline-block; padding: 3px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .badge.gold { background: #ffd700; color: #333; }
+        .badge.silver { background: #c0c0c0; color: #333; }
+        .badge.bronze { background: #cd7f32; color: white; }
+        .badge.active { background: #e6f4ea; color: #34a853; }
+        .badge.inactive { background: #fce8e6; color: #ea4335; }
+        .btn-logout { background: #666; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-logout:hover { background: #555; }
+        .section-title { margin-top: 30px; margin-bottom: 10px; }
+        .loading { color: #666; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <div class="header">
+                <div>
+                    <h1>WORKPULSE</h1>
+                    <p class="subtitle">📊 CEO Dashboard</p>
+                </div>
+                <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <a href="/dashboard.html" class="back">← Back to Dashboard</a>
+
+            <div class="grid" id="summaryGrid">
+                <div class="card"><div class="number" id="branchCount">-</div><div class="label">🏢 Branches</div></div>
+                <div class="card"><div class="number" id="employeeCount">-</div><div class="label">👥 Total Employees</div></div>
+                <div class="card"><div class="number" id="activeCount">-</div><div class="label">✅ Active Now</div></div>
+            </div>
+
+            <h3 class="section-title">🏆 Branch Performance Ranking</h3>
+            <div id="rankingContainer"><p class="loading">Loading ranking...</p></div>
+
+            <h3 class="section-title">📍 All Branches</h3>
+            <div id="branchContainer"><p class="loading">Loading branches...</p></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://your-backend-url.onrender.com';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!user.id) {
+            window.location.href = '/';
+        }
+
+        async function loadData() {
+            // Load branches
+            try {
+                const branchRes = await fetch(`${API_URL}/api/branches`);
+                const branchData = await branchRes.json();
+                if (branchData.success) {
+                    const branches = branchData.branches || [];
+                    document.getElementById('branchCount').textContent = branches.length;
+
+                    let totalEmployees = 0;
+                    let activeNow = 0;
+                    branches.forEach(b => {
+                        totalEmployees += 0;
+                        activeNow += 0;
+                    });
+
+                    document.getElementById('employeeCount').textContent = totalEmployees || '0';
+                    document.getElementById('activeCount').textContent = activeNow || '0';
+
+                    let html = `<table class="branch-table"><thead><tr><th>Branch</th><th>Employees</th><th>Status</th></tr></thead><tbody>`;
+                    branches.forEach(b => {
+                        const status = `<span class="badge inactive">⚪ Inactive</span>`;
+                        html += `<tr><td><strong>${b.name}</strong></td><td>0</td><td>${status}</td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('branchContainer').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading branches:', error);
+                document.getElementById('branchContainer').innerHTML = '<p class="loading">Failed to load branches</p>';
+            }
+
+            // Load ranking
+            try {
+                const rankRes = await fetch(`${API_URL}/api/ranking`);
+                const rankData = await rankRes.json();
+                if (rankData.success) {
+                    const ranking = rankData.ranking || [];
+                    if (ranking.length === 0) {
+                        document.getElementById('rankingContainer').innerHTML = '<p class="loading">No data yet.</p>';
+                        return;
+                    }
+                    let html = `<table class="branch-table"><thead><tr><th>Rank</th><th>Branch</th><th>Total Hours</th></tr></thead><tbody>`;
+                    ranking.forEach((b, i) => {
+                        const rank = i+1;
+                        let cls = '', badge = '';
+                        if (rank === 1) { cls = 'rank-1'; badge = '<span class="badge gold">🥇 #1</span>'; }
+                        else if (rank === 2) { cls = 'rank-2'; badge = '<span class="badge silver">🥈 #2</span>'; }
+                        else if (rank === 3) { cls = 'rank-3'; badge = '<span class="badge bronze">🥉 #3</span>'; }
+                        html += `<tr class="${cls}"><td>${badge || '#'+rank}</td><td><strong>${b.name}</strong></td><td>${Math.round(b.total_hours)}h</td></tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('rankingContainer').innerHTML = html;
+                }
+            } catch (error) {
+                console.error('Error loading ranking:', error);
+                document.getElementById('rankingContainer').innerHTML = '<p class="loading">Failed to load ranking</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>
