@@ -3,122 +3,79 @@
 <head>
     <title>WorkPulse - Dashboard</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .dashboard-box {
-            background: white;
-            padding: 40px;
-            border-radius: 10px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            width: 400px;
-            text-align: center;
-        }
-        .dashboard-box h1 { color: #1a73e8; }
-        .btn-logout {
-            padding: 10px 20px;
-            background: #ea4335;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        .btn-logout:hover { background: #c5221f; }
-        .btn-checkin {
-            padding: 10px 20px;
-            background: #34a853;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        .btn-checkin:hover { background: #2d9248; }
-        .btn-checkout {
-            padding: 10px 20px;
-            background: #ea4335;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin: 5px;
-        }
-        .btn-checkout:hover { background: #c5221f; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f4f6f9; padding: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        .user-info { background: #f0f4ff; padding: 20px; border-radius: 10px; margin: 15px 0; }
+        .user-info h2 { margin-bottom: 5px; }
+        .role-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .role-badge.ceo { background: #1a73e8; color: white; }
+        .role-badge.manager { background: #34a853; color: white; }
+        .role-badge.staff { background: #fbbc04; color: #333; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .card { background: #f8f9fa; padding: 20px; border-radius: 10px; text-align: center; border: 1px solid #e0e0e0; }
+        .card .number { font-size: 28px; font-weight: 700; color: #1a73e8; }
+        .card h3 { font-size: 14px; color: #666; margin-bottom: 5px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-success { background: #34a853; color: white; }
+        .btn-success:hover { background: #2d9248; }
+        .btn-danger { background: #ea4335; color: white; }
+        .btn-danger:hover { background: #d33426; }
+        .btn-logout { background: #666; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-logout:hover { background: #555; }
         .status { font-weight: bold; }
-        .status-checkedin { color: #34a853; }
-        .status-checkedout { color: #ea4335; }
+        .green { color: #34a853; }
+        .red { color: #ea4335; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .history-table th, .history-table td { padding: 10px; border: 1px solid #e0e0e0; text-align: left; }
+        .history-table th { background: #f0f4ff; }
+        .role-links { margin: 15px 0; }
+        .role-links a { display: inline-block; background: #1a73e8; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; margin-right: 10px; }
+        .role-links a:hover { background: #1557b0; }
+        .btn-group { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .btn-group .btn { flex: 1; min-width: 120px; }
+        .branch-info { color: #666; font-size: 14px; margin: 5px 0; }
     </style>
 </head>
 <body>
-    <div class="dashboard-box">
-        <h1>WORKPULSE</h1>
-        <h2>Dashboard</h2>
-        <p id="userDisplay">Loading...</p>
-        <p id="roleDisplay"></p>
-        <p id="branchDisplay"></p>
-        <hr>
-        <p>Status: <span id="statusDisplay" class="status status-checkedout">Not Checked In</span></p>
-        <p>Hours Today: <span id="hoursDisplay">0.0</span>h</p>
-        <div>
-            <button class="btn-checkin" id="checkInBtn">✅ Check In</button>
-            <button class="btn-checkout" id="checkOutBtn" disabled>❌ Check Out</button>
+    <div class="container">
+        <div class="box">
+            <h1>WORKPULSE</h1>
+            <p>Smart Workforce Monitoring</p>
+
+            <div class="user-info" id="userInfo">
+                <h2 id="userDisplay">Loading...</h2>
+                <p id="roleDisplay"></p>
+                <p class="branch-info" id="branchDisplay"></p>
+                <div class="role-links" id="roleLinks"></div>
+            </div>
+
+            <div class="grid">
+                <div class="card"><h3>📅 Today</h3><p id="todayDate"></p></div>
+                <div class="card"><h3>⏰ Status</h3><p id="checkStatus" class="status red">Not Checked In</p></div>
+                <div class="card"><h3>🕐 Hours</h3><p id="hoursDisplay">0.0h</p></div>
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-success" id="checkInBtn">✅ Check In</button>
+                <button class="btn btn-danger" id="checkOutBtn" disabled>❌ Check Out</button>
+            </div>
+
+            <h3 style="margin-top:30px;">📋 Attendance History</h3>
+            <div id="historyContainer"><p style="color:#666;">Loading...</p></div>
+
+            <br>
+            <button class="btn-logout" id="logoutBtn">🚪 Logout</button>
         </div>
-        <hr>
-        <h4>Attendance History</h4>
-        <div id="historyContainer"><p style="color:#666;font-size:14px;">No records yet.</p></div>
-        <button class="btn-logout" onclick="logout()">Logout</button>
     </div>
 
     <script>
-        // Replace with your Render backend URL
-        const API_URL = 'https://medioocareworkpulse.onrender.com';
-        const user = JSON.parse(localStorage.getItem('user'));
-
-        if (!user || !user.id) {
-            window.location.href = '/';
-        }
-
-        document.getElementById('userDisplay').textContent = '👋 Welcome, ' + user.name;
-        document.getElementById('roleDisplay').textContent = 'Role: ' + user.role;
-        document.getElementById('branchDisplay').textContent = '📍 Branch: ' + (user.branch_id || 'Not assigned');
-
-        function logout() {
-            localStorage.removeItem('user');
-            window.location.href = '/';
-        }
-
-        document.getElementById('checkInBtn').addEventListener('click', function() {
-            if (!navigator.geolocation) {
-                alert('❌ GPS not supported on this device');
-                return;
-            }
-
-            navigator.geolocation.getCurrentPosition(function(position) {
-                alert('✅ Checked in at ' + new Date().toLocaleTimeString());
-                document.getElementById('statusDisplay').textContent = '✅ Checked In';
-                document.getElementById('statusDisplay').className = 'status status-checkedin';
-                document.getElementById('checkInBtn').disabled = true;
-                document.getElementById('checkOutBtn').disabled = false;
-            }, function() {
-                alert('❌ Could not get location. Please enable GPS.');
-            });
-        });
-
-        document.getElementById('checkOutBtn').addEventListener('click', function() {
-            alert('✅ Checked out at ' + new Date().toLocaleTimeString());
-            document.getElementById('statusDisplay').textContent = '❌ Not Checked In';
-            document.getElementById('statusDisplay').className = 'status status-checkedout';
-            document.getElementById('checkInBtn').disabled = false;
-            document.getElementById('checkOutBtn').disabled = true;
-            document.getElementById('hoursDisplay').textContent = '8.0';
+        document.getElementById('todayDate').textContent = new Date().toLocaleDateString('en-US', {
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
         });
     </script>
+    <script src="dashboard.js"></script>
 </body>
 </html>
