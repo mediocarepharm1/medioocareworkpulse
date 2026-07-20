@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WorkPulse - Admin Panel</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f4f6f9; padding: 20px; }
+        .container { max-width: 1100px; margin: auto; }
+        .box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        .back { color: #1a73e8; text-decoration: none; font-weight: 600; }
+        .back:hover { text-decoration: underline; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .subtitle { color: #666; margin-top: 5px; }
+        .section { margin-top: 30px; }
+        .section h3 { margin-bottom: 10px; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-primary:hover { background: #1557b0; }
+        .btn-success { background: #34a853; color: white; }
+        .btn-success:hover { background: #2d9248; }
+        .btn-danger { background: #ea4335; color: white; }
+        .btn-danger:hover { background: #c5221f; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        .table th, .table td { padding: 8px 12px; border: 1px solid #e0e0e0; text-align: left; }
+        .table th { background: #f0f4ff; font-weight: 600; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .form-group input, .form-group select { width: 100%; padding: 8px 12px; border: 1px solid #ddd; border-radius: 5px; font-size: 14px; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-row .full { grid-column: span 2; }
+        .btn-logout { background: #666; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-logout:hover { background: #555; }
+        .mt-10 { margin-top: 10px; }
+        .mb-10 { margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <div class="header">
+                <div>
+                    <h1>WORKPULSE</h1>
+                    <p class="subtitle">⚙️ Admin Panel</p>
+                </div>
+                <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <a href="/dashboard.html" class="back">← Back to Dashboard</a>
+
+            <!-- Users Section -->
+            <div class="section">
+                <h3>👤 User Management</h3>
+                <button class="btn btn-primary" onclick="toggleUserForm()">+ Add User</button>
+                <div id="userForm" style="display:none; background:#f8f9fa; padding:15px; border-radius:8px; margin-top:10px;">
+                    <h4>Create New User</h4>
+                    <form id="createUserForm">
+                        <div class="form-row">
+                            <div class="form-group"><label>First Name</label><input type="text" id="ufirstname" required></div>
+                            <div class="form-group"><label>Last Name</label><input type="text" id="ulastname" required></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Phone Number</label><input type="text" id="uphone" required></div>
+                            <div class="form-group"><label>Password</label><input type="text" id="upassword" value="123456"></div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Role</label>
+                                <select id="urole">
+                                    <option value="staff">Staff</option>
+                                    <option value="manager">Manager</option>
+                                    <option value="CEO">CEO</option>
+                                    <option value="Admin">Admin</option>
+                                </select>
+                            </div>
+                            <div class="form-group"><label>Branch ID</label><input type="number" id="ubranch" value="1"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Create User</button>
+                        <button type="button" class="btn btn-danger" onclick="toggleUserForm()">Cancel</button>
+                    </form>
+                </div>
+                <div id="userList"><p>Loading users...</p></div>
+            </div>
+
+            <!-- Branches Section -->
+            <div class="section">
+                <h3>🏢 Branch Management</h3>
+                <button class="btn btn-primary" onclick="toggleBranchForm()">+ Add Branch</button>
+                <div id="branchForm" style="display:none; background:#f8f9fa; padding:15px; border-radius:8px; margin-top:10px;">
+                    <h4>Create New Branch</h4>
+                    <form id="createBranchForm">
+                        <div class="form-group"><label>Branch Name</label><input type="text" id="bname" required></div>
+                        <div class="form-group"><label>Location</label><input type="text" id="blocation" required></div>
+                        <div class="form-row">
+                            <div class="form-group"><label>Latitude</label><input type="text" id="blat" value="-1.2864"></div>
+                            <div class="form-group"><label>Longitude</label><input type="text" id="blng" value="36.8172"></div>
+                        </div>
+                        <button type="submit" class="btn btn-success">Create Branch</button>
+                        <button type="button" class="btn btn-danger" onclick="toggleBranchForm()">Cancel</button>
+                    </form>
+                </div>
+                <div id="branchList"><p>Loading branches...</p></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://your-backend-url.onrender.com';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!user.id) {
+            window.location.href = '/';
+        }
+
+        // ============================================
+        // USER FUNCTIONS
+        // ============================================
+
+        function toggleUserForm() {
+            const form = document.getElementById('userForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                first_name: document.getElementById('ufirstname').value,
+                last_name: document.getElementById('ulastname').value,
+                phone: document.getElementById('uphone').value,
+                password_hash: document.getElementById('upassword').value || '123456',
+                role: document.getElementById('urole').value,
+                branch_id: parseInt(document.getElementById('ubranch').value) || null
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ User created!');
+                    document.getElementById('userForm').style.display = 'none';
+                    loadUsers();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (err) {
+                alert('❌ Failed to create user');
+            }
+        });
+
+        async function loadUsers() {
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users`);
+                const data = await res.json();
+                if (data.success) {
+                    const users = data.users || [];
+                    if (users.length === 0) {
+                        document.getElementById('userList').innerHTML = '<p style="color:#666;">No users yet.</p>';
+                        return;
+                    }
+                    let html = `<table class="table"><thead><tr><th>Name</th><th>Phone</th><th>Role</th><th>Branch</th><th>Action</th></tr></thead><tbody>`;
+                    users.forEach(u => {
+                        html += `<tr>
+                            <td>${u.first_name} ${u.last_name}</td>
+                            <td>${u.phone_number}</td>
+                            <td>${u.role}</td>
+                            <td>${u.branch_id || '-'}</td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteUser('${u.id}')">Delete</button></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('userList').innerHTML = html;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('userList').innerHTML = '<p style="color:#666;">Failed to load users.</p>';
+            }
+        }
+
+        async function deleteUser(id) {
+            if (!confirm('Delete this user?')) return;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/users/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ User deleted');
+                    loadUsers();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (err) {
+                alert('❌ Failed to delete user');
+            }
+        }
+
+        // ============================================
+        // BRANCH FUNCTIONS
+        // ============================================
+
+        function toggleBranchForm() {
+            const form = document.getElementById('branchForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.getElementById('createBranchForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('bname').value,
+                location: document.getElementById('blocation').value,
+                latitude: parseFloat(document.getElementById('blat').value) || 0,
+                longitude: parseFloat(document.getElementById('blng').value) || 0
+            };
+
+            try {
+                const res = await fetch(`${API_URL}/api/admin/branches`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (result.success) {
+                    alert('✅ Branch created!');
+                    document.getElementById('branchForm').style.display = 'none';
+                    loadBranches();
+                } else {
+                    alert('❌ ' + result.message);
+                }
+            } catch (err) {
+                alert('❌ Failed to create branch');
+            }
+        });
+
+        async function loadBranches() {
+            try {
+                const res = await fetch(`${API_URL}/api/branches`);
+                const data = await res.json();
+                if (data.success) {
+                    const branches = data.branches || [];
+                    if (branches.length === 0) {
+                        document.getElementById('branchList').innerHTML = '<p style="color:#666;">No branches yet.</p>';
+                        return;
+                    }
+                    let html = `<table class="table"><thead><tr><th>Name</th><th>Location</th><th>Action</th></tr></thead><tbody>`;
+                    branches.forEach(b => {
+                        html += `<tr>
+                            <td>${b.name}</td>
+                            <td>${b.location}</td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteBranch(${b.id})">Delete</button></td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    document.getElementById('branchList').innerHTML = html;
+                }
+            } catch (err) {
+                console.error(err);
+                document.getElementById('branchList').innerHTML = '<p style="color:#666;">Failed to load branches.</p>';
+            }
+        }
+
+        async function deleteBranch(id) {
+            if (!confirm('Delete this branch?')) return;
+            try {
+                const res = await fetch(`${API_URL}/api/admin/branches/${id}`, { method: 'DELETE' });
+                const data = await res.json();
+                if (data.success) {
+                    alert('✅ Branch deleted');
+                    loadBranches();
+                } else {
+                    alert('❌ ' + data.message);
+                }
+            } catch (err) {
+                alert('❌ Failed to delete branch');
+            }
+        }
+
+        // ============================================
+        // LOGOUT
+        // ============================================
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        // ============================================
+        // INIT
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUsers();
+            loadBranches();
+        });
+    </script>
+</body>
+</html>
