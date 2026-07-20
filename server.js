@@ -6,26 +6,43 @@ const { createClient } = require('@supabase/supabase-js');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ✅ CORS – allow all origins (temporarily for debugging)
+// ============================================
+// ✅ CORS – HANDLE PREFLIGHT REQUESTS
+// ============================================
 app.use(cors({
     origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
+// ✅ Handle OPTIONS preflight requests explicitly
+app.options('*', (req, res) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.sendStatus(200);
+});
+
 app.use(express.json());
 
+// ============================================
+// SUPABASE CLIENT
+// ============================================
 const supabase = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_ANON_KEY
 );
 
-// Test route
+// ============================================
+// ROUTES
+// ============================================
+
+// ✅ Test route
 app.get('/', (req, res) => {
     res.json({ message: 'WorkPulse API is running!' });
 });
 
-// Login route
+// ✅ Login route
 app.post('/api/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
@@ -45,6 +62,7 @@ app.post('/api/login', async (req, res) => {
 
         const user = users[0];
 
+        // Simple password check (add bcrypt later)
         if (user.password_hash !== password) {
             return res.status(401).json({ success: false, message: 'Invalid credentials' });
         }
@@ -66,6 +84,9 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// ============================================
+// START SERVER
+// ============================================
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
 });
