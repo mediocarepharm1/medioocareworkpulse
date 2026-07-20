@@ -14,10 +14,12 @@ const supabase = createClient(
     process.env.SUPABASE_ANON_KEY
 );
 
+// Test route
 app.get('/', (req, res) => {
     res.json({ message: 'WorkPulse API is running!' });
 });
 
+// Login route
 app.post('/api/login', async (req, res) => {
     try {
         const { phone, password } = req.body;
