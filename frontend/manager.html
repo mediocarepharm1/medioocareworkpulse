@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WorkPulse - Manager Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial; background: #f4f6f9; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        .box { background: white; padding: 30px; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        .back { color: #1a73e8; text-decoration: none; font-weight: 600; }
+        .back:hover { text-decoration: underline; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .subtitle { color: #666; margin-top: 5px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: #f8f9fa; padding: 15px; border-radius: 10px; text-align: center; border: 1px solid #e0e0e0; }
+        .stat-card .number { font-size: 28px; font-weight: 700; color: #1a73e8; }
+        .stat-card .label { font-size: 13px; color: #666; margin-top: 5px; }
+        .employee-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .employee-table th, .employee-table td { padding: 10px 12px; border: 1px solid #e0e0e0; text-align: left; }
+        .employee-table th { background: #f0f4ff; font-weight: 600; }
+        .employee-table tr:hover { background: #f8f9fa; }
+        .status-badge { display: inline-block; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+        .status-badge.active { background: #e6f4ea; color: #34a853; }
+        .status-badge.inactive { background: #fce8e6; color: #ea4335; }
+        .btn-logout { background: #666; color: white; padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; }
+        .btn-logout:hover { background: #555; }
+        .loading { color: #666; padding: 20px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="box">
+            <div class="header">
+                <div>
+                    <h1>WORKPULSE</h1>
+                    <p class="subtitle">📋 Branch Manager Dashboard</p>
+                </div>
+                <button class="btn-logout" onclick="logout()">🚪 Logout</button>
+            </div>
+
+            <a href="/dashboard.html" class="back">← Back to Dashboard</a>
+
+            <div id="branchInfo" style="margin: 15px 0;">
+                <h3 id="branchName" style="color: #1a73e8;">Loading branch...</h3>
+            </div>
+
+            <div class="stats" id="statsContainer">
+                <div class="stat-card"><div class="number" id="totalStaff">-</div><div class="label">👥 Total Staff</div></div>
+                <div class="stat-card"><div class="number" id="activeNow">-</div><div class="label">✅ Active Now</div></div>
+                <div class="stat-card"><div class="number" id="absentToday">-</div><div class="label">❌ Absent Today</div></div>
+            </div>
+
+            <h3 style="margin-top: 20px;">👥 Your Team</h3>
+            <div id="employeeContainer"><p class="loading">Loading employees...</p></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'https://your-backend-url.onrender.com';
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+        if (!user.id) {
+            window.location.href = '/';
+        }
+
+        async function loadEmployees() {
+            try {
+                const res = await fetch(`${API_URL}/api/branch/${user.branch_id || 1}/employees`);
+                const data = await res.json();
+                const container = document.getElementById('employeeContainer');
+
+                if (data.success) {
+                    const employees = data.employees || [];
+                    document.getElementById('branchName').textContent = '📍 Branch: ' + (user.branch_name || 'Branch ' + (user.branch_id || 1));
+
+                    const active = employees.filter(e => e.attendance_status === 'active').length;
+                    const total = employees.length;
+                    document.getElementById('totalStaff').textContent = total || '0';
+                    document.getElementById('activeNow').textContent = active || '0';
+                    document.getElementById('absentToday').textContent = (total - active) || '0';
+
+                    if (employees.length === 0) {
+                        container.innerHTML = '<p class="loading">No employees in your branch yet.</p>';
+                        return;
+                    }
+
+                    let html = `<table class="employee-table"><thead><tr><th>Name</th><th>Role</th><th>Status</th><th>Check In Time</th></tr></thead><tbody>`;
+                    employees.forEach(e => {
+                        const status = e.attendance_status === 'active' 
+                            ? `<span class="status-badge active">✅ Active</span>` 
+                            : `<span class="status-badge inactive">❌ Away</span>`;
+                        const checkInTime = e.check_in_time ? new Date(e.check_in_time).toLocaleTimeString() : '-';
+                        html += `<tr>
+                            <td><strong>${e.first_name} ${e.last_name}</strong></td>
+                            <td>${e.role || 'Staff'}</td>
+                            <td>${status}</td>
+                            <td>${checkInTime}</td>
+                        </tr>`;
+                    });
+                    html += '</tbody></table>';
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = '<p class="loading">Failed to load employees.</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('employeeContainer').innerHTML = '<p class="loading">Error loading employees.</p>';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadEmployees);
+    </script>
+</body>
+</html>
